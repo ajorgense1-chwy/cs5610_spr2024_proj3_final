@@ -4,6 +4,7 @@ const router = express.Router();
 let pokemonColors = [
     {name: "pikachu", color: "yellow"},
     {name: "charizard", color: "red"},
+    // snorlax, blue
 ];
 
 // /pokemon/
@@ -52,15 +53,16 @@ router.delete('/:pokemonId', function(req, res) {
     return res.send("Success :)");
 })
 
+// localhost:8000/api/pokemon?name=pikachu
 router.get('/', function(req, res) {
     const pokemonName = req.query.name
 
-    for(let i = 0; i < pokemonColors.length; i++) {
-        const pokemonRow = pokemonColors[i];
-        if(pokemonRow.name === pokemonName) {
-            return res.send('The color of ' + pokemonName + " is " + pokemonRow.color);
-        }
-    }
+    // for(let i = 0; i < pokemonColors.length; i++) {
+    //     const pokemonRow = pokemonColors[i];
+    //     if(pokemonRow.name === pokemonName) {
+    //         return res.send('The color of ' + pokemonName + " is " + pokemonRow.color);
+    //     }
+    // }
 
     return res.send(pokemonColors);
 })

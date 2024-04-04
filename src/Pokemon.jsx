@@ -1,8 +1,7 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 
-function Pokemon() {
-
+function PokemonPage() {
   const [pokemonListState, setPokemonListState] = useState([]);
   const [pokemonNameState, setPokemonNameState] = useState('');
   const [pokemonColorState, setPokemonColorState] = useState('');
@@ -81,4 +80,4 @@ function Pokemon() {
   )
 }
 
-export default Pokemon;
+export default PokemonPage;
