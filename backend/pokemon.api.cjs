@@ -1,3 +1,5 @@
+const cookieHelper = require('./cookie.helper.cjs');
+
 const express = require('express');
 const router = express.Router();
 const PokemonModel = require('./db/pokemon.model.cjs')
@@ -10,6 +12,12 @@ let pokemonColors = [
 // /api/pokemon/
 router.post('/', async function(req, res) {
     const requestBody = req.body;
+    const username = cookieHelper.cookieDecryptor(req);
+
+    if(!username) {
+        res.status(401);
+        return res.send("You need to be logged in to create a pokemon!")
+    }
 
     if(!requestBody.name || !requestBody.color) {
         res.status(401);
@@ -19,7 +27,7 @@ router.post('/', async function(req, res) {
     const newPokemon = {
         name: requestBody.name,
         color: requestBody.color,
-        owner: "hunter",
+        owner: username,
     }
 
     // console.log(newPokemon);
@@ -42,7 +50,12 @@ router.post('/', async function(req, res) {
 router.put('/:pkId', async function(req, res) {
     const pokemonId = req.params.pkId;
     const pokemonData = req.body;
-    // const trainer = req.params.trainer;
+    const owner = cookieHelper.cookieDecryptor(req);
+
+    if(!owner) {
+        res.status(401);
+        return res.send("You need to be logged in to create a pokemon!")
+    }
 
     if (!pokemonData.name || !pokemonData.color) {
         res.status(400);
@@ -50,23 +63,19 @@ router.put('/:pkId', async function(req, res) {
     }
 
     try {
+        // verify that this pokemon is owned by this user
+        const getPokemonResponse = await PokemonModel.getPokemonById(pokemonId);
+        if(getPokemonResponse !== null && getPokemonResponse.owner !== owner) {
+            res.status(400);
+            return res.send("You do not own this Pokemon!");
+        }
+
         const pokemonUpdateResponse = await PokemonModel.updatePokemon(pokemonId, pokemonData);
         return res.send('Successfully updated pokemon ID ' + pokemonId)
     } catch (error) {
         res.status(400);
         return res.send(error);
     }
-    // for(let i = 0; i < pokemonColors.length; i++) {
-    //     const pokemonRow = pokemonColors[i];
-    //     if(pokemonRow.name === pokemonName) {
-    //         pokemonRow.name = pokemonData.name;
-    //         pokemonRow.color = pokemonData.color;
-    //         return res.send('The color of ' + pokemonName + " is " + pokemonRow.color);
-    //     }
-    // }
-
-    // res.status(404);
-    // return res.send("Pokemon with name " + pokemonName + " not found :(");
 })
 
 
@@ -75,7 +84,6 @@ router.put('/:pkId', async function(req, res) {
 // -> /pokemon/pikachu?food=banana
 router.get('/:pkId', async function(req, res) {
     const pokemonId = req.params.pkId;
-    // const trainer = req.params.trainer;
 
 
     try {
@@ -92,8 +100,20 @@ router.get('/:pkId', async function(req, res) {
 
 router.delete('/:pokemonId', async function(req, res) {
     const pokemonId = req.params.pokemonId;
+    const owner = cookieHelper.cookieDecryptor(req);
+
+    if(!owner) {
+        res.status(401);
+        return res.send("You need to be logged in to create a pokemon!")
+    }
 
     try {
+        const getPokemonResponse = await PokemonModel.getPokemonById(pokemonId);
+        if(getPokemonResponse !== null && getPokemonResponse.owner !== owner) {
+            res.status(400);
+            return res.send("You do not own this Pokemon!");
+        }
+
         const deletePokemonResponse = await PokemonModel.deletePokemon(pokemonId);
         return res.send(deletePokemonResponse);
     } catch (error) {
@@ -109,7 +129,12 @@ router.delete('/:pokemonId', async function(req, res) {
 
 // localhost:8000/api/pokemon?name=pikachu
 router.get('/', async function(req, res) {
-    const owner = req.cookies.pokemonOwner;
+    const owner = cookieHelper.cookieDecryptor(req);
+
+    if(!owner) {
+        res.status(401);
+        return res.send("You need to be logged in to create a pokemon!")
+    }
 
     // for(let i = 0; i < pokemonColors.length; i++) {
     //     const pokemonRow = pokemonColors[i];

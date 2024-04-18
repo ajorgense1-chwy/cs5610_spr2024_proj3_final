@@ -1,7 +1,10 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router';
 
 function PokemonPage() {
+  const  navigate = useNavigate();
+
   const [pokemonListState, setPokemonListState] = useState([]);
   const [pokemonNameState, setPokemonNameState] = useState('');
   const [pokemonColorState, setPokemonColorState] = useState('');
@@ -10,6 +13,7 @@ function PokemonPage() {
     editingPokemonId: '',
   });
   const [errorMsgState, setErrorMsgState] = useState('');
+  const [username, setUsername] = useState('');
 
   async function getAllPokemon() {
     const response = await axios.get('/api/pokemon');
@@ -67,7 +71,10 @@ function PokemonPage() {
   }
 
   function onStart() {
-    getAllPokemon();
+    isLoggedIn()
+      .then(() => {
+        getAllPokemon()
+      })
   }
 
   function onCancel() {
@@ -79,7 +86,24 @@ function PokemonPage() {
   });
   }
 
+
+  async function logout() {
+    await axios.post('/api/users/logout');
+    navigate('/');
+  }
+
+  async function isLoggedIn() {
+    try {
+      const response = await axios.get('/api/users/loggedIn');
+      const username = response.data.username;
+      setUsername(username);
+    } catch (e) {
+      navigate('/')
+    }
+  }
+
   useEffect(onStart, []);
+
 
   const pokemonListElement = [];
   for(let i = 0; i < pokemonListState.length; i++) {
@@ -93,12 +117,20 @@ function PokemonPage() {
 
   const inputFieldTitleText = editingState.isEditing ? "Edit Pokemon" : "Add new pokemon";
 
+  if(!username) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div>
+        <div>
+          <button onClick={logout}>Logout</button>
+        
+        </div>
         {errorMsgState && <h1>
             {errorMsgState}
         </h1>}
-        Here are all your pokemon!!
+        Here are all your pokemon, {username}!!
         <ul>
             {pokemonListElement}
         </ul>
